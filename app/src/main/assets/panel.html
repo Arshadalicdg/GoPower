@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoPower</title>
+    <style>
+        html,
+        body {
+            display: flex;
+            flex-direction: row;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        img {
+            border: none;
+        }
+
+        .penal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background-image: url('./box-app-base.jpeg');
+            background-repeat: no-repeat;
+            background-size: auto;
+            background-size: 100%
+        }
+
+        .PanelRight {
+            display: flex;
+            flex-grow: 1;
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            background-image: url("qr_panel.jpg");
+            background-repeat: no-repeat;
+            background-size: cover;
+            align-items: center;
+        }
+
+        .QrCanvas {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            gap: 5vh;
+            margin: 54px 0 0 0;
+            overflow: hidden;
+        }
+
+        .QRCodeWrapper {
+            display: flex;
+            flex-grow: 1;
+            vertical-align: baseline;
+            align-items: center;
+        }
+
+        .QrCodeFrame {
+            display: flex;
+            padding: 8px;
+            flex-direction: column;
+            background-color: black;
+            border-radius: 16px;
+            gap: 8px;
+        }
+
+        #logo {
+            height: 80px;
+            margin-top: 8px;
+            margin-bottom: 32px;
+            object-fit: contain;
+        }
+
+        #qrContainer {
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+
+        #qrcode {
+            display: block;
+            min-width: 202px;
+            min-height: 202px;
+            padding: 8px 8px 0 8px;
+            background-color: white;
+            border-radius: 8px;
+            justify-content: center;
+        }
+
+        #boxSN {
+            display: block;
+            margin: 0 auto;
+            font-size: 16px;
+            font-family: "Roboto";
+        }
+
+        #ScanMe {
+            color: white;
+            text-align: center;
+            font-size: 32px;
+            font-family: "Roboto Light";
+            margin-top: 8px;
+        }
+
+        #CableText {
+            text-align: center;
+            font-size: 28px;
+            font-family: "Roboto Light";
+            margin-top: 8px;
+        }
+
+        #advertisement {
+            display: flex;
+            object-fit: cover;
+            height: 100vh;
+        }
+
+        #disclaimer {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #CableImageContainer {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        #CablePic {
+            max-height: 162px;
+            object-fit: contain;
+        }
+    </style>
+    <link href="./Roboto/" rel="stylesheet">
+    <script src="./qrcode.min.js"></script>
+</head>
+
+<body>
+    <img id="advertisement" src="./gopower-panel.png" alt="panel_image"></img>
+    <div class="PanelRight">
+        <div class="QrCanvas">
+            <img id="logo" src="./croped-logo-horizontal.svg" alt="logo horizontal">
+            <div class="QRCodeWrapper">
+                <div class="QrCodeFrame">
+                    <div id="qrContainer">
+                        <div id="qrcode"></div>
+                        <text id="boxSN"></text>
+                    </div>
+                    <text id="ScanMe">Scan Me</text>
+                </div>
+            </div>
+            <text id="CableText">Apple & Android Device Support</text>
+            <div id="CableImageContainer">
+                <img src="./cables.png" id="CablePic" alt="cable_pic" />
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        var sn;
+        const boxSN = document.getElementById('boxSN');
+        window.onload = function () {
+            sn = "00000000";
+            if (window.bridge) {
+                if (window.bridge.getSN() !== "00000000") {
+                    sn = window.bridge.getSN();
+                    document.getElementById('boxSN').innerText = sn;
+                    const qr = new QRCode("qrcode", {
+                        text: "https://app.gopower.live/rent?boxSN=" + sn,
+                        width: 202,
+                        height: 202,
+                    });
+                };
+            };
+        };
+    </script>
+</body>
+
+</html>

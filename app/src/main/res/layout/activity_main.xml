@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    tools:context=".MainActivity">
+
+<!--    <Button-->
+<!--        android:id="@+id/btn_send_broadcast"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="发送广播" />-->
+
+<!--    <TextView-->
+
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="2:联网成功,4:租借功,5:租借失败,6:归还成功,7:归还失败" />-->
+
+<!--    <TextView-->
+<!--        android:id="@+id/tv_log"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:gravity="center"-->
+<!--        android:text="Hello World!" />-->
+
+    <WebView
+        android:id="@+id/root_view"
+        android:layout_width="match_parent"
+        android:visibility="visible"
+        android:layout_height="match_parent">
+    </WebView>
+
+    <TextView
+        android:id="@+id/getsr"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="GET"
+        android:textSize="25dp"
+        android:visibility="gone"
+        android:textColor="@color/black"
+        android:gravity="center_horizontal"/>
+
+</FrameLayout>
