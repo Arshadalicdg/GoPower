@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     final int REQUEST_CODE = 101;
    static String android_id;
 
-   TextView getsr;
+   //TextView getsr;
     @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-        getsr=findViewById(R.id.getsr);
+     //   getsr=findViewById(R.id.getsr);
         EventBus.getDefault().register(this);
         Logger.addLogAdapter(new AndroidLogAdapter());
 //        getsr.setOnClickListener(view -> {
