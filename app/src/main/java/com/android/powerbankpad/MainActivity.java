@@ -1,18 +1,31 @@
 package com.android.powerbankpad;
 
 import android.annotation.SuppressLint;
+import android.app.DownloadManager;
+import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.ParcelFileDescriptor;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.MimeTypeMap;
+import android.webkit.URLUtil;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,7 +34,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.powerbankpad.ApiUnits.RetrofitInstance;
-import com.android.powerbankpad.Model.Data;
 import com.android.powerbankpad.Model.DataModel;
 import com.orhanobut.logger.AndroidLogAdapter;
 import com.orhanobut.logger.Logger;
@@ -29,6 +41,13 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 import retrofit2.Call;
@@ -42,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     final int REQUEST_CODE = 101;
    static String android_id;
 
-   //TextView getsr;
+   TextView getsr;
     @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -51,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-     //   getsr=findViewById(R.id.getsr);
+        getsr=findViewById(R.id.getsr);
         EventBus.getDefault().register(this);
         Logger.addLogAdapter(new AndroidLogAdapter());
 //        getsr.setOnClickListener(view -> {
@@ -85,21 +104,91 @@ public class MainActivity extends AppCompatActivity {
 //                    Toast.makeText(this, "getSerNumber"+ android_id, Toast.LENGTH_SHORT).show();
 
                     onEventbusEvent(android_id);
+
+
+                    dialog=new ProgressDialog(this);
+                    dialog.setMessage("Downloading Please wait!");
+                    dialog.show();
                     getapicall();
                 }
             }, 1000*a); // 10 seconds
         }
     }
 
+    ProgressDialog dialog;
+    private void createDirectory(String logoUrl, List<String> adsUrl) {
+
+
+        File yourAppDir = new File(Environment.getExternalStorageDirectory()+File.separator+"/GoPower"+"/assets/");
+
+        if(!yourAppDir.exists() && !yourAppDir.isDirectory())
+        {
+
+
+            // create empty directory
+            if (yourAppDir.mkdirs())
+            {
+                Log.i("CreateDir","App dir created");
+
+                handleResult(yourAppDir,logoUrl);
+                handleVideo(yourAppDir,adsUrl);
+
+            }
+            else
+            {
+                Log.w("CreateDir","Unable to create app dir!");
+            }
+        }
+        else
+        {
+//            handleResult(logoUrl);
+            Log.i("CreateDir","App dir already exists");
+
+           // handleResult(yourAppDir,logoUrl);
+
+        }
+    }
+
+    private void handleVideo(File yourAppDir, List<String> adsUrl) {
+
+        for(int i = 0 ;i<adsUrl.size();i++){
+            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(adsUrl.get(i));
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.allowScanningByMediaScanner();
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
+            //        String logo = URLUtil.guessFileName(logoUrl,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
+            request.setDestinationInExternalPublicDir(String.valueOf(yourAppDir), "video.mp4");
+            manager.enqueue(request);
+        }
+        dialog.dismiss();
+
+    }
+
+
+    private void handleResult(File yourAppDir, String logoUrl) {
+            DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+            Uri uri = Uri.parse(logoUrl);
+            DownloadManager.Request request = new DownloadManager.Request(uri);
+            request.allowScanningByMediaScanner();
+            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
+            //        String logo = URLUtil.guessFileName(logoUrl,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
+            request.setDestinationInExternalPublicDir(String.valueOf(yourAppDir), "logo.png");
+            manager.enqueue(request);
+    }
     private void getapicall() {
 
         Call<DataModel> call = RetrofitInstance.getInstance().getMyApi().getValue(android_id);
         call.enqueue(new Callback<DataModel>() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onResponse(Call<DataModel> call, Response<DataModel> response) {
                 if(response.isSuccessful()){
                     DataModel data = response.body();
-                    Log.e("onResponse", "onResponse: "+data.getStatus() );
+                    Log.e("onResponse", "onResponse: "+data.getData().getAdsUrl() );
+
+                    createDirectory(data.getData().getLogoUrl(), data.getData().getAdsUrl());
+
                     Toast.makeText(getApplicationContext(), ""+data.getStatus(), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -113,7 +202,6 @@ public class MainActivity extends AppCompatActivity {
 
         });
     }
-
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventbusEvent(String msg) {

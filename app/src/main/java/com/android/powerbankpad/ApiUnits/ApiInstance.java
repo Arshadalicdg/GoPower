@@ -7,7 +7,7 @@ import retrofit2.http.Query;
 public interface ApiInstance {
 
     String BASE_URL = "http://test.api.gopowerapp.live";
-    @GET("/panel/?dsn=")
+    @GET("/panel")
     Call<DataModel> getValue(@Query("dsn") String dsn);
 
 }
