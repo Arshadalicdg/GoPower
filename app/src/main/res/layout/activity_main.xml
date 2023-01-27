@@ -33,14 +33,6 @@
         android:layout_height="match_parent">
     </WebView>
 
-    <TextView
-        android:id="@+id/getsr"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:text="GET"
-        android:textSize="25dp"
-        android:visibility="gone"
-        android:textColor="@color/black"
-        android:gravity="center_horizontal"/>
+
 
 </FrameLayout>

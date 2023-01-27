@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
     static String android_id;
     String filename;
 
-   TextView getsr;
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -71,12 +71,9 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
-        getsr=findViewById(R.id.getsr);
         EventBus.getDefault().register(this);
         Logger.addLogAdapter(new AndroidLogAdapter());
-//        getsr.setOnClickListener(view -> {
-//            getapicall();
-//        });
+
         this.webView = findViewById(R.id.root_view);
         WebSettings ws = this.webView.getSettings();
         ws.setJavaScriptEnabled(true);
@@ -121,17 +118,15 @@ public class MainActivity extends AppCompatActivity {
 
 
         File yourAppDir = new File(Environment.getExternalStorageDirectory()+File.separator+"/GoPower"+"/assets/");
-        filename= Environment.getExternalStorageDirectory()+File.separator+"/GoPower"+"/assets/";
+//        filename= Environment.getExternalStorageDirectory()+File.separator+"/GoPower"+"/assets/";
         if(!yourAppDir.exists() && !yourAppDir.isDirectory())
         {
             // create empty directory
             if (yourAppDir.mkdirs())
             {
                 Log.i("CreateDir","App dir created");
-
                 handleResult(yourAppDir,logoUrl);
                 handleVideo( yourAppDir,adsUrl);
-
             }
             else
             {
@@ -142,9 +137,7 @@ public class MainActivity extends AppCompatActivity {
         {
 //            handleResult(logoUrl);
             Log.i("CreateDir","App dir already exists");
-
            // handleResult(yourAppDir,logoUrl);
-
         }
     }
 
@@ -153,13 +146,16 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 0 ;i<adsUrl.size();i++){
             DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             Uri uri = Uri.parse(adsUrl.get(i));
+            String url = String.valueOf(uri);
+            String[] hope = url.split("/");
+            String done="";
+            done =hope[3];
             DownloadManager.Request request = new DownloadManager.Request(uri);
             request.allowScanningByMediaScanner();
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
-            //        String logo = URLUtil.guessFileName(logoUrl,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
-//            request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/video", "video.mp4");
-
-            request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/video", "video.mp4")));
+            String logo = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(String.valueOf(uri)));
+//          request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/video", "video.mp4");
+            request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/"+done, logo)));
             manager.enqueue(request);
         }
         dialog.dismiss();
@@ -168,24 +164,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void handleResult(File yourAppDir, String logoUrl) {
-        String fname="logo.png";
-        String fileimage=filename+"/image"+"/"+fname;
-        File result = new File(yourAppDir.getAbsolutePath()+"/image", "logo.png");
-
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-            Uri uri = Uri.parse(logoUrl);
-            DownloadManager.Request request = new DownloadManager.Request(uri);
-            request.allowScanningByMediaScanner();
-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
-            //        String logo = URLUtil.guessFileName(logoUrl,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
-//            request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/image", "logo.png");
-            request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/image", "logo.png")));
-
-
+        Uri uri = Uri.parse(logoUrl);
+        String url = String.valueOf(uri);
+        String[] hope = url.split("/");
+        String done="";
+        done =  hope[3];
+        DownloadManager.Request request = new DownloadManager.Request(uri);
+        request.allowScanningByMediaScanner();
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
+        String logo = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
+//      request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/image", "logo.png");
+        request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/"+done, logo)));
         manager.enqueue(request);
-
-
-
     }
     private void getapicall() {
 
