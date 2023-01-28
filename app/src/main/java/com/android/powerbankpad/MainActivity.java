@@ -7,6 +7,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -48,6 +49,7 @@ import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 import retrofit2.Call;
@@ -60,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
     public static String sn = "00000000";
     final int REQUEST_CODE = 101;
     static String android_id;
-    String filename;
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -71,6 +72,8 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
+
+
         EventBus.getDefault().register(this);
         Logger.addLogAdapter(new AndroidLogAdapter());
 
@@ -114,14 +117,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     ProgressDialog dialog;
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void createDirectory(String logoUrl, List<String> adsUrl) {
 
-
         File yourAppDir = new File(Environment.getExternalStorageDirectory()+File.separator+"/GoPower"+"/assets/");
-//        filename= Environment.getExternalStorageDirectory()+File.separator+"/GoPower"+"/assets/";
+
         if(!yourAppDir.exists() && !yourAppDir.isDirectory())
         {
-            // create empty directory
             if (yourAppDir.mkdirs())
             {
                 Log.i("CreateDir","App dir created");
@@ -135,9 +137,46 @@ public class MainActivity extends AppCompatActivity {
         }
         else
         {
-//            handleResult(logoUrl);
-            Log.i("CreateDir","App dir already exists");
-           // handleResult(yourAppDir,logoUrl);
+            Log.i("CreateDir", "App dir already exists   ");
+            {
+            Uri uri = Uri.parse(logoUrl);
+            String url = String.valueOf(uri);
+            String[] hope = url.split("/");
+            String getpath="",getpaths="";
+            getpath =  hope[3]+"/"+hope[4];
+            String[] done1 = getpath.split("\\?");
+            getpaths=done1[0];
+            File path=new File(yourAppDir.getAbsolutePath()+"/"+getpaths);
+            if(path.exists()){
+                Log.i("CreateDir","already download logo");
+            }
+            else{
+                handleResult(yourAppDir,logoUrl);
+                Log.i("CreateDir"," download logo");
+                }
+            }
+
+            {
+                for(int i = 0 ;i<adsUrl.size();i++) {
+                    Uri uri = Uri.parse(adsUrl.get(i));
+                    String url = String.valueOf(uri);
+                    String[] hope = url.split("/");
+                    String getpath="",getpaths="";
+                    getpath =  hope[3]+"/"+hope[4];
+                    String[] done1 = getpath.split("\\?");
+                    getpaths=done1[0];
+                    File path = new File(yourAppDir.getAbsolutePath() + "/" + getpaths);
+                    if (path.exists()) {
+                        Log.i("CreateDir", "already download video image");
+                    } else {
+
+                            Log.i("CreateDir"," file missing download video image");
+                            handleVideo( yourAppDir, Collections.singletonList(adsUrl.get(i)));
+
+                    }
+                }
+            }
+
         }
     }
 
