@@ -1,6 +1,8 @@
 package com.android.powerbankpad;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -127,95 +129,58 @@ public class MainActivity extends AppCompatActivity {
             if (yourAppDir.mkdirs())
             {
                 Log.i("CreateDir","App dir created");
-                handleResult(yourAppDir,logoUrl);
-                handleVideo( yourAppDir,adsUrl);
             }
             else
             {
-                Log.w("CreateDir","Unable to create app dir!");
+                dialog.dismiss();
+                Toast.makeText(getApplicationContext(), "unable to make directory", Toast.LENGTH_SHORT).show();
+                // Create the AlertDialog object and return it
+                return;
             }
         }
-        else
-        {
-            Log.i("CreateDir", "App dir already exists   ");
-            {
-            Uri uri = Uri.parse(logoUrl);
-            String url = String.valueOf(uri);
-            String[] hope = url.split("/");
-            String getpath="",getpaths="";
-            getpath =  hope[3]+"/"+hope[4];
-            String[] done1 = getpath.split("\\?");
-            getpaths=done1[0];
-            File path=new File(yourAppDir.getAbsolutePath()+"/"+getpaths);
-            if(path.exists()){
-                Log.i("CreateDir","already download logo");
-            }
-            else{
-                handleResult(yourAppDir,logoUrl);
-                Log.i("CreateDir"," download logo");
-                }
-            }
-
-            {
-                for(int i = 0 ;i<adsUrl.size();i++) {
-                    Uri uri = Uri.parse(adsUrl.get(i));
-                    String url = String.valueOf(uri);
-                    String[] hope = url.split("/");
-                    String getpath="",getpaths="";
-                    getpath =  hope[3]+"/"+hope[4];
-                    String[] done1 = getpath.split("\\?");
-                    getpaths=done1[0];
-                    File path = new File(yourAppDir.getAbsolutePath() + "/" + getpaths);
-                    if (path.exists()) {
-                        Log.i("CreateDir", "already download video image");
-                    } else {
-
-                            Log.i("CreateDir"," file missing download video image");
-                            handleVideo( yourAppDir, Collections.singletonList(adsUrl.get(i)));
-
-                    }
-                }
-            }
-
-        }
+        handleLogoDownload(yourAppDir,logoUrl);
+        handleAdsDownload(yourAppDir,adsUrl);
+        dialog.dismiss();
     }
 
-    private void handleVideo(File yourAppDir, List<String> adsUrl) {
+    private void handleAdsDownload(File yourAppDir, List<String> adsUrl) {
 
         for(int i = 0 ;i<adsUrl.size();i++){
             DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             Uri uri = Uri.parse(adsUrl.get(i));
             String url = String.valueOf(uri);
-            String[] hope = url.split("/");
-            String done="";
-            done =hope[3];
+            String[] urlSnippet = url.split("/");
+            String fileType =urlSnippet[3];
             DownloadManager.Request request = new DownloadManager.Request(uri);
             request.allowScanningByMediaScanner();
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
-            String logo = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(String.valueOf(uri)));
+            String fileName = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(String.valueOf(uri)));
+            File path = new File(yourAppDir.getAbsolutePath()+"/"+fileType, fileName);
+            if(!path.exists()){
+                request.setDestinationUri(Uri.fromFile(path));
+                manager.enqueue(request);
+            }
 //          request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/video", "video.mp4");
-            request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/"+done, logo)));
-            manager.enqueue(request);
         }
-        dialog.dismiss();
-
     }
 
 
-    private void handleResult(File yourAppDir, String logoUrl) {
+    private void handleLogoDownload(File yourAppDir, String logoUrl) {
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         Uri uri = Uri.parse(logoUrl);
         String url = String.valueOf(uri);
-        String[] hope = url.split("/");
-        String done="";
-        done =  hope[3];
+        String[] urlSnippet = url.split("/");
+        String fileType =  urlSnippet[3];
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.allowScanningByMediaScanner();
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
-        String logo = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
-//      request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/image", "logo.png");
-        request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/"+done, logo)));
-        manager.enqueue(request);
+        String fileName = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
+        File path = new File(yourAppDir.getAbsolutePath()+"/"+fileType, fileName);
+        if(!path.exists()){
+            request.setDestinationUri(Uri.fromFile(path));
+            manager.enqueue(request);
+        }
+        //      request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/image", "logo.png");
     }
     private void getapicall() {
 
