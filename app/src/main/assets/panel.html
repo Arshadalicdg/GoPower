@@ -147,12 +147,13 @@
     <img id="advertisement" src="./gopower-panel.png" alt="panel_image"></img>
     <div class="PanelRight">
         <div class="QrCanvas">
-            <img id="logo" src="./croped-logo-horizontal.svg" alt="logo horizontal">
+                <img id="logo" src="" alt="logo horizontal">
+<!--            <img id="logo" src="./croped-logo-horizontal.svg" alt="logo horizontal">-->
             <div class="QRCodeWrapper">
                 <div class="QrCodeFrame">
                     <div id="qrContainer">
                         <div id="qrcode"></div>
-                        <text id="boxSN"></text>
+                        <div id="boxSN"></div>
                     </div>
                     <text id="ScanMe">Scan Me</text>
                 </div>
@@ -165,13 +166,16 @@
     </div>
     <script type="text/javascript">
         var sn;
+        var imglogo;
         const boxSN = document.getElementById('boxSN');
+        const logo = document.getElementById('logo');
         window.onload = function () {
             sn = "00000000";
+            imglogo="00000000";
             if (window.bridge) {
                 if (window.bridge.getSN() !== "00000000") {
-                    sn = window.bridge.getSN();
-                    document.getElementById('boxSN').innerText = sn;
+                sn = window.bridge.getSN();
+                document.getElementById('boxSN').innerText = sn;
                     const qr = new QRCode("qrcode", {
                         text: "https://app.gopower.live/rent?boxSN=" + sn,
                         width: 202,
@@ -179,6 +183,8 @@
                     });
                 };
             };
+              imglogo = window.bridge.getImglogo();
+              document.getElementById("logo").src= imglogo;
         };
     </script>
 </body>

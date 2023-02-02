@@ -1,10 +1,9 @@
 package com.android.powerbankpad;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.ProgressDialog;
+import android.app.usage.UsageEvents;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -61,11 +60,14 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     WebView webView = null;
-    public static String sn = "00000000";
+    public static String sn = "00000000",imglogo="00000000";
+    public static String logo="";
     final int REQUEST_CODE = 101;
-    static String android_id;
+    static String android_id,img;
+    ProgressDialog dialog,imgdialog;
 
 
+    static String image_name;
     @RequiresApi(api = Build.VERSION_CODES.O)
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -75,8 +77,13 @@ public class MainActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
-
         EventBus.getDefault().register(this);
+
+        dialog=new ProgressDialog(this);
+        imgdialog=new ProgressDialog(this);
+        imgdialog.setMessage("Please wait!");
+        dialog.setMessage("Downloading Please wait!");
+
         Logger.addLogAdapter(new AndroidLogAdapter());
 
         this.webView = findViewById(R.id.root_view);
@@ -98,27 +105,21 @@ public class MainActivity extends AppCompatActivity {
                     Intent getSerNum = new Intent(ConstantDatas.GET_SERNUM_BROADCAST_ACTION);
                     intent.setComponent(new ComponentName("com.lechang.service2", "com.lechang.service2.ThirdAppReceiver"));
                     MainActivity.this.sendBroadcast(getSerNum);
-//                    Toast.makeText(this, "getSerNum" +getSerNum, Toast.LENGTH_SHORT).show();
                     Logger.d("Logger  MainActivity 发送 获取序列号的广播  ");
+
 
            android_id = Settings.Secure.getString(getApplicationContext()
                                     .getContentResolver(),
                             Settings.Secure.ANDROID_ID);
-//                    Toast.makeText(this, "getSerNumber"+ android_id, Toast.LENGTH_SHORT).show();
 
-                    onEventbusEvent(android_id);
-
-
-                    dialog=new ProgressDialog(this);
-                    dialog.setMessage("Downloading Please wait!");
-                    dialog.show();
+//                    onEventbusEvent(android_id,img);
                     getapicall();
+//                    onEvent(android_id,img);
                 }
             }, 1000*a); // 10 seconds
         }
     }
 
-    ProgressDialog dialog;
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void createDirectory(String logoUrl, List<String> adsUrl) {
 
@@ -128,81 +129,129 @@ public class MainActivity extends AppCompatActivity {
         {
             if (yourAppDir.mkdirs())
             {
+                dialog.show();
                 Log.i("CreateDir","App dir created");
+                handleResult(yourAppDir,logoUrl);
+                handleVideo( yourAppDir,adsUrl);
             }
             else
             {
-                dialog.dismiss();
-                Toast.makeText(getApplicationContext(), "unable to make directory", Toast.LENGTH_SHORT).show();
-                // Create the AlertDialog object and return it
-                return;
+                Log.w("CreateDir","Unable to create app dir!");
             }
         }
-        handleLogoDownload(yourAppDir,logoUrl);
-        handleAdsDownload(yourAppDir,adsUrl);
-        dialog.dismiss();
+        else
+        {
+            Log.i("CreateDir", "App dir already exists   ");
+            {
+            Uri uri = Uri.parse(logoUrl);
+            String url = String.valueOf(uri);
+            String[] hope = url.split("/");
+            String getpath="",getpaths="";
+            getpath =  hope[3]+"/"+hope[4];
+            String[] done1 = getpath.split("\\?");
+            getpaths=done1[0];
+            File path=new File(yourAppDir.getAbsolutePath()+"/"+getpaths);
+            if(path.exists()){
+                Log.i("CreateDir","already download logo  "+path);
+                dialog.dismiss();
+            }
+            else{
+                dialog.show();
+                handleResult(yourAppDir,logoUrl);
+                Log.i("CreateDir"," download logo");
+                }
+            }
+
+            {
+                for(int i = 0 ;i<adsUrl.size();i++) {
+                    Uri uri = Uri.parse(adsUrl.get(i));
+                    String url = String.valueOf(uri);
+                    String[] hope = url.split("/");
+                    String getpath="",getpaths="";
+                    getpath =  hope[3]+"/"+hope[4];
+                    String[] done1 = getpath.split("\\?");
+                    getpaths=done1[0];
+                    File path = new File(yourAppDir.getAbsolutePath() + "/" + getpaths);
+                    if (path.exists()) {
+                        Log.i("CreateDir", "already download video image  "+path);
+                        dialog.dismiss();
+
+                    } else {
+                        dialog.show();
+                            Log.i("CreateDir"," file missing download video image");
+                            handleVideo( yourAppDir, Collections.singletonList(adsUrl.get(i)));
+
+                    }
+                }
+            }
+
+        }
     }
 
-    private void handleAdsDownload(File yourAppDir, List<String> adsUrl) {
+    private void handleVideo(File yourAppDir, List<String> adsUrl) {
 
         for(int i = 0 ;i<adsUrl.size();i++){
             DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
             Uri uri = Uri.parse(adsUrl.get(i));
             String url = String.valueOf(uri);
-            String[] urlSnippet = url.split("/");
-            String fileType =urlSnippet[3];
+            String[] hope = url.split("/");
+            String done="";
+            done =hope[3];
             DownloadManager.Request request = new DownloadManager.Request(uri);
             request.allowScanningByMediaScanner();
             request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
-            String fileName = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(String.valueOf(uri)));
-            File path = new File(yourAppDir.getAbsolutePath()+"/"+fileType, fileName);
-            if(!path.exists()){
-                request.setDestinationUri(Uri.fromFile(path));
-                manager.enqueue(request);
-            }
+            String logo = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(String.valueOf(uri)));
 //          request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/video", "video.mp4");
+            request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/"+done, logo)));
+            manager.enqueue(request);
         }
+        dialog.dismiss();
+
     }
 
-
-    private void handleLogoDownload(File yourAppDir, String logoUrl) {
+    private void handleResult(File yourAppDir, String logoUrl) {
         DownloadManager manager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         Uri uri = Uri.parse(logoUrl);
         String url = String.valueOf(uri);
-        String[] urlSnippet = url.split("/");
-        String fileType =  urlSnippet[3];
+        String[] hope = url.split("/");
+        String done="";
+        done =  hope[3];
         DownloadManager.Request request = new DownloadManager.Request(uri);
         request.allowScanningByMediaScanner();
         request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED); // to notify when download is complete
-        String fileName = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
-        File path = new File(yourAppDir.getAbsolutePath()+"/"+fileType, fileName);
-        if(!path.exists()){
-            request.setDestinationUri(Uri.fromFile(path));
-            manager.enqueue(request);
-        }
-        //      request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/image", "logo.png");
+        String logo = URLUtil.guessFileName(url,null, MimeTypeMap.getFileExtensionFromUrl(logoUrl));
+//      request.setDestinationInExternalPublicDir(yourAppDir.getAbsolutePath()+"/image", "logo.png");
+        request.setDestinationUri(Uri.fromFile(new File(yourAppDir.getAbsolutePath()+"/"+done, logo)));
+        manager.enqueue(request);
     }
-    private void getapicall() {
 
+    private void getapicall() {
+        imgdialog.show();
         Call<DataModel> call = RetrofitInstance.getInstance().getMyApi().getValue(android_id);
         call.enqueue(new Callback<DataModel>() {
+            @SuppressLint("NewApi")
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onResponse(Call<DataModel> call, Response<DataModel> response) {
                 if(response.isSuccessful()){
+
                     DataModel data = response.body();
                     Log.e("onResponse", "onResponse: "+data.getData().getAdsUrl() );
-
+                    img=data.getData().getLogoUrl();
                     createDirectory(data.getData().getLogoUrl(), data.getData().getAdsUrl());
+                    new Handler().postDelayed(() ->{
+                        onEvent(android_id,img);
+                    },1000);
 
-                    Toast.makeText(getApplicationContext(), ""+data.getStatus(), Toast.LENGTH_SHORT).show();
+                    imgdialog.dismiss();
+//                    Toast.makeText(getApplicationContext(), ""+data.getStatus(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<DataModel> call, Throwable t) {
                 Log.e("onResponse", "onResponse: "+t );
-
+                imgdialog.dismiss();
                 Toast.makeText(getApplicationContext(), "An error has occured" +t, Toast.LENGTH_LONG).show();
             }
 
@@ -218,10 +267,21 @@ public class MainActivity extends AppCompatActivity {
         //mLog.setText(mLog.getText() + "\n" + msg);
         //this.webView.loadUrl("javascript:javacalljs(" + msg + ")");
         sn = msg;
+//        imglogo=images;
 //        Log.e("TAGTAGTAG", "onEventbusEvent: "+sn );
         this.webView.addJavascriptInterface(new MyJavascriptInterface(), "bridge");
         this.webView.reload();
     }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(String msg,String images ) {
+        sn = msg;
+        imglogo=images;
+        this.webView.addJavascriptInterface(new MyJavascriptInterface(), "bridge");
+        this.webView.reload();
+    }
+
 
     @Override
     protected void onDestroy() {
