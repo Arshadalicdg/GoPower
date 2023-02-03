@@ -151,13 +151,16 @@ public class MainActivity extends AppCompatActivity {
             String[] done1 = getpath.split("\\?");
             getpaths=done1[0];
             File path=new File(yourAppDir.getAbsolutePath()+"/"+getpaths);
+            img= String.valueOf(path);
+            onEvent(android_id,img);
             if(path.exists()){
-                Log.i("CreateDir","already download logo  "+path);
+                Log.i("CreateDirpath","already download logo  "+img);
                 dialog.dismiss();
             }
             else{
                 dialog.show();
                 handleResult(yourAppDir,logoUrl);
+//                onEvent(android_id,img);
                 Log.i("CreateDir"," download logo");
                 }
             }
@@ -175,7 +178,6 @@ public class MainActivity extends AppCompatActivity {
                     if (path.exists()) {
                         Log.i("CreateDir", "already download video image  "+path);
                         dialog.dismiss();
-
                     } else {
                         dialog.show();
                             Log.i("CreateDir"," file missing download video image");
@@ -234,16 +236,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<DataModel> call, Response<DataModel> response) {
                 if(response.isSuccessful()){
-
+                    imgdialog.dismiss();
                     DataModel data = response.body();
                     Log.e("onResponse", "onResponse: "+data.getData().getAdsUrl() );
-                    img=data.getData().getLogoUrl();
+//                    img=data.getData().getLogoUrl();
                     createDirectory(data.getData().getLogoUrl(), data.getData().getAdsUrl());
-                    new Handler().postDelayed(() ->{
-                        onEvent(android_id,img);
-                    },1000);
+//                    new Handler().postDelayed(() ->{
+////                        onEvent(android_id,img);
+//                    },1000);
 
-                    imgdialog.dismiss();
+
 //                    Toast.makeText(getApplicationContext(), ""+data.getStatus(), Toast.LENGTH_SHORT).show();
                 }
             }
